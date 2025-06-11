@@ -1,8 +1,13 @@
 {
-  "rewrites": [
-    {
-      "source": "/f/:file*",
-      "destination": "https://files.catbox.moe/:file*"
-    }
+  "version": 2,
+  "builds": [
+    { "src": "api/uplod.js", "use": "@vercel/node" },
+    { "src": "pages/f/[id].js", "use": "@vercel/node" },
+    { "src": "index.html", "use": "@vercel/static" }
+  ],
+  "routes": [
+    { "src": "/api/uplod", "dest": "api/uplod.js" },
+    { "src": "/f/(.*)", "dest": "pages/f/[id].js" },
+    { "src": "/", "dest": "index.html" }
   ]
 }
