@@ -1,11 +1,7 @@
-import formidable from 'formidable';
-import fs from 'fs';
-import FormData from 'form-data';
-
 export const config = {
   api: {
-    bodyParser: false
-  }
+    bodyParser: false,
+  },
 };
 
 export default async function handler(req, res) {
@@ -13,36 +9,42 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Only POST allowed' });
   }
 
-  const form = new formidable.IncomingForm();
+  const boundary = req.headers['content-type'].split('boundary=')[1];
+  const chunks = [];
 
-  form.parse(req, async (err, fields, files) => {
-    if (err) return res.status(500).json({ error: 'Form parse failed' });
+  for await (const chunk of req) chunks.push(chunk);
+  const buffer = Buffer.concat(chunks);
 
-    const file = files.file?.[0];
-    if (!file) return res.status(400).json({ error: 'No file uploaded' });
+  // Extract file content from multipart form
+  const match = buffer.toString().match(/filename="(.+?)"\r\nContent-Type: (.+?)\r\n\r\n([\s\S]+?)\r\n--/);
+  if (!match) return res.status(400).json({ error: "File parse failed" });
 
-    const formData = new FormData();
-    formData.append('reqtype', 'fileupload');
-    formData.append('fileToUpload', fs.createReadStream(file.filepath));
+  const filename = match[1];
+  const contentType = match[2];
+  const fileData = buffer.slice(buffer.indexOf(match[3]));
 
-    try {
-      const catboxRes = await fetch('https://catbox.moe/user/api.php', {
-        method: 'POST',
-        body: formData
-      });
+  const blob = new Blob([fileData], { type: contentType });
+  const formData = new FormData();
+  formData.append("reqtype", "fileupload");
+  formData.append("fileToUpload", blob, filename);
 
-      const url = await catboxRes.text();
-      const fileId = url.split('/').pop();
-      const myUrl = `https://castmurl.vercel.app/f/${fileId}`;
+  try {
+    const catboxRes = await fetch("https://catbox.moe/user/api.php", {
+      method: "POST",
+      body: formData,
+    });
 
-      res.status(200).json({
-        status: true,
-        uploader: "MR RABBIT",
-        original: file.originalFilename,
-        url: myUrl
-      });
-    } catch (e) {
-      res.status(500).json({ error: 'Upload failed' });
-    }
-  });
+    const url = await catboxRes.text();
+    const fileId = url.trim().split("/").pop();
+    const customLink = `https://castmurl.vercel.app/f/${fileId}`;
+
+    res.status(200).json({
+      status: true,
+      uploader: "MR RABBIT",
+      original: filename,
+      url: customLink,
+    });
+  } catch (e) {
+    res.status(500).json({ error: "Upload failed" });
+  }
 }
