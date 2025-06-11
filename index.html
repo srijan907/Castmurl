@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MR RABBIT Uploader</title>
+  <style>
+    body { font-family: sans-serif; padding: 2em; text-align: center; }
+    input[type="file"] { margin-bottom: 1em; }
+    .result { margin-top: 1em; font-weight: bold; }
+    button { padding: 0.5em 1em; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1>🐰 MR RABBIT File Uploader</h1>
+  <input type="file" id="fileInput" />
+  <br>
+  <button onclick="uploadFile()">Upload</button>
+  <div class="result" id="result"></div>
+
+  <script>
+    async function uploadFile() {
+      const fileInput = document.getElementById('fileInput');
+      if (!fileInput.files.length) {
+        alert("Please select a file!");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("file", fileInput.files[0]);
+
+      document.getElementById('result').innerText = "Uploading...";
+
+      try {
+        const res = await fetch("/api/uplod", {
+          method: "POST",
+          body: formData
+        });
+        const data = await res.json();
+        if (data.url) {
+          document.getElementById('result').innerHTML = `
+            ✅ Uploaded! <br>
+            <a href="${data.url}" target="_blank">${data.url}</a>
+          `;
+        } else {
+          document.getElementById('result').innerText = "Upload failed!";
+        }
+      } catch (e) {
+        document.getElementById('result').innerText = "Error uploading file.";
+      }
+    }
+  </script>
+</body>
+</html>
