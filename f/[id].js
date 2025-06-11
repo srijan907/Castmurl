@@ -1,10 +1,8 @@
 export async function getServerSideProps({ params }) {
-  const id = params.id;
-  const originalUrl = `https://files.catbox.moe/${id}`;
-
+  const id = Array.isArray(params.id) ? params.id.join("/") : params.id;
   return {
     redirect: {
-      destination: originalUrl,
+      destination: `https://files.catbox.moe/${id}`,
       permanent: false,
     },
   };
