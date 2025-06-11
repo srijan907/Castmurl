@@ -1,34 +1,96 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>MR RABBIT Uploader</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MR RABBIT File Uploader</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f5f7fa;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 50px 20px;
+    }
+    h1 {
+      color: #333;
+    }
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      max-width: 400px;
+      width: 100%;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    input[type="file"] {
+      margin-top: 10px;
+      width: 100%;
+    }
+    button {
+      margin-top: 15px;
+      padding: 10px 20px;
+      background: #0070f3;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    button:hover {
+      background: #0051a3;
+    }
+    .result {
+      margin-top: 20px;
+      word-break: break-all;
+    }
+    .error {
+      color: red;
+    }
+  </style>
 </head>
 <body>
-  <h2>📤 Upload your file</h2>
-  <input type="file" id="fileInput" />
-  <button onclick="uploadFile()">Upload</button>
-  <p id="output"></p>
+  <h1>📤 MR RABBIT File Uploader</h1>
+  <div class="card">
+    <input type="file" id="fileInput" />
+    <button onclick="uploadFile()">Upload</button>
+    <div class="result" id="result"></div>
+  </div>
 
   <script>
     async function uploadFile() {
       const file = document.getElementById("fileInput").files[0];
-      if (!file) return alert("Please select a file");
+      const result = document.getElementById("result");
+      result.innerHTML = "";
+
+      if (!file) {
+        result.innerHTML = "<div class='error'>Please select a file</div>";
+        return;
+      }
 
       const formData = new FormData();
       formData.append("file", file);
 
+      result.innerHTML = "⏳ Uploading...";
+
       try {
-        const res = await fetch("/api/uplod", {
+        const response = await fetch("/api/uplod", {
           method: "POST",
           body: formData
         });
 
-        const data = await res.json();
-        document.getElementById("output").innerHTML = data.short_link 
-          ? `<a href="${data.short_link}" target="_blank">${data.short_link}</a>`
-          : `Error: ${data.error}`;
+        const data = await response.json();
+        if (data.status === "success") {
+          result.innerHTML = `
+            ✅ Uploaded! <br />
+            🔗 <a href="${data.short_link}" target="_blank">${data.short_link}</a>
+          `;
+        } else {
+          result.innerHTML = "<div class='error'>Upload failed: " + data.error + "</div>";
+        }
       } catch (err) {
-        document.getElementById("output").innerText = "Upload failed.";
+        result.innerHTML = "<div class='error'>Upload failed: " + err.message + "</div>";
       }
     }
   </script>
