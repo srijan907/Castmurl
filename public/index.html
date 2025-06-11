@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>MR RABBIT Uploader</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #fafafa;
+      padding: 50px;
+      text-align: center;
+    }
+    .box {
+      background: #fff;
+      padding: 20px;
+      max-width: 500px;
+      margin: auto;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .result {
+      margin-top: 20px;
+      word-break: break-all;
+      text-align: left;
+    }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h2>🗂️ MR RABBIT File Uploader</h2>
+    <form id="uploadForm">
+      <input type="file" name="file" required><br><br>
+      <button type="submit">📤 Upload</button>
+    </form>
+
+    <div class="result" id="result"></div>
+  </div>
+
+  <script>
+    const form = document.getElementById('uploadForm');
+    const result = document.getElementById('result');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(form);
+
+      result.innerHTML = "Uploading...⏳";
+
+      try {
+        const res = await fetch('/api/uplod', {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await res.json();
+
+        if (data.status) {
+          result.innerHTML = `
+            <p><strong>✅ Uploaded by:</strong> ${data.creator}</p>
+            <p><strong>Original File:</strong> ${data.original_name}</p>
+            <p><strong>Mimetype:</strong> ${data.mimetype}</p>
+            <h4>🔗 Links:</h4>
+            <ul>
+              ${Object.entries(data.links).map(([k, v]) => `<li><b>${k}:</b> <a href="${v}" target="_blank">${v}</a></li>`).join('')}
+            </ul>
+          `;
+        } else {
+          result.innerHTML = `<p style="color:red;">❌ Error: ${data.error || 'Unknown error'}</p>`;
+        }
+
+      } catch (err) {
+        result.innerHTML = `<p style="color:red;">❌ Upload failed: ${err.message}</p>`;
+      }
+    });
+  </script>
+</body>
+</html>
