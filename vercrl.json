@@ -1,3 +1,8 @@
 {
-  "cleanUrls": true
+  "rewrites": [
+    {
+      "source": "/f/:file*",
+      "destination": "https://files.catbox.moe/:file*"
+    }
+  ]
 }
