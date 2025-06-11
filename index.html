@@ -1,52 +1,34 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>MR RABBIT Uploader</title>
-  <style>
-    body { font-family: sans-serif; padding: 2em; text-align: center; }
-    input[type="file"] { margin-bottom: 1em; }
-    .result { margin-top: 1em; font-weight: bold; }
-    button { padding: 0.5em 1em; cursor: pointer; }
-  </style>
 </head>
 <body>
-  <h1>🐰 MR RABBIT File Uploader</h1>
+  <h2>📤 Upload your file</h2>
   <input type="file" id="fileInput" />
-  <br>
   <button onclick="uploadFile()">Upload</button>
-  <div class="result" id="result"></div>
+  <p id="output"></p>
 
   <script>
     async function uploadFile() {
-      const fileInput = document.getElementById('fileInput');
-      if (!fileInput.files.length) {
-        alert("Please select a file!");
-        return;
-      }
+      const file = document.getElementById("fileInput").files[0];
+      if (!file) return alert("Please select a file");
 
       const formData = new FormData();
-      formData.append("file", fileInput.files[0]);
-
-      document.getElementById('result').innerText = "Uploading...";
+      formData.append("file", file);
 
       try {
         const res = await fetch("/api/uplod", {
           method: "POST",
           body: formData
         });
+
         const data = await res.json();
-        if (data.url) {
-          document.getElementById('result').innerHTML = `
-            ✅ Uploaded! <br>
-            <a href="${data.url}" target="_blank">${data.url}</a>
-          `;
-        } else {
-          document.getElementById('result').innerText = "Upload failed!";
-        }
-      } catch (e) {
-        document.getElementById('result').innerText = "Error uploading file.";
+        document.getElementById("output").innerHTML = data.short_link 
+          ? `<a href="${data.short_link}" target="_blank">${data.short_link}</a>`
+          : `Error: ${data.error}`;
+      } catch (err) {
+        document.getElementById("output").innerText = "Upload failed.";
       }
     }
   </script>
