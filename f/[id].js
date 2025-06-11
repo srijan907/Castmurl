@@ -1,19 +1,19 @@
-export async function getServerSideProps({ params }) {
-  const { id } = params;
-  const baseId = id.split('_')[0];
-  const ext = id.slice(id.lastIndexOf('.'));
+// pages/f/[id].js
 
-  // Catbox লিংক তৈরি
-  const catboxLink = `https://files.catbox.moe/${baseId}${ext}`;
+import { getFile } from '@/utils/store';
 
-  return {
-    redirect: {
-      destination: catboxLink,
-      permanent: false,
-    },
-  };
-}
+export default async function handler(req, res) {
+  const { id } = req.query;
+  const cleanId = id.split('.')[0];
+  const fileData = getFile(cleanId);
 
-export default function RedirectPage() {
-  return null;
+  if (!fileData) {
+    return res.status(404).send('🔗 Link expired or not found');
+  }
+
+  if (fileData.expires && Date.now() > fileData.expires) {
+    return res.status(410).send('🕒 This link has expired');
+  }
+
+  return res.redirect(fileData.original);
 }
